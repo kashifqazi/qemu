@@ -60,7 +60,7 @@ void hmp_info_version(Monitor *mon, const QDict *qdict)
     info = qmp_query_version(NULL);
 
     monitor_printf(mon, "%" PRId64 ".%" PRId64 ".%" PRId64 "%s\n",
-                   info->qemu->major, info->qemu->minor, info->qemu->micro,
+                   info->qemu.major, info->qemu.minor, info->qemu.micro,
                    info->package);
 
     qapi_free_VersionInfo(info);
@@ -250,29 +250,6 @@ void hmp_info_migrate_capabilities(Monitor *mon, const QDict *qdict)
     }
 
     qapi_free_MigrationCapabilityStatusList(caps);
-}
-
-void hmp_info_migrate_parameters(Monitor *mon, const QDict *qdict)
-{
-    MigrationParameters *params;
-
-    params = qmp_query_migrate_parameters(NULL);
-
-    if (params) {
-        monitor_printf(mon, "parameters:");
-        monitor_printf(mon, " %s: %" PRId64,
-            MigrationParameter_lookup[MIGRATION_PARAMETER_COMPRESS_LEVEL],
-            params->compress_level);
-        monitor_printf(mon, " %s: %" PRId64,
-            MigrationParameter_lookup[MIGRATION_PARAMETER_COMPRESS_THREADS],
-            params->compress_threads);
-        monitor_printf(mon, " %s: %" PRId64,
-            MigrationParameter_lookup[MIGRATION_PARAMETER_DECOMPRESS_THREADS],
-            params->decompress_threads);
-        monitor_printf(mon, "\n");
-    }
-
-    qapi_free_MigrationParameters(params);
 }
 
 void hmp_info_migrate_cache_size(Monitor *mon, const QDict *qdict)
@@ -671,14 +648,14 @@ static void hmp_info_pci_device(Monitor *mon, const PciDeviceInfo *dev)
                    dev->slot, dev->function);
     monitor_printf(mon, "    ");
 
-    if (dev->class_info->has_desc) {
-        monitor_printf(mon, "%s", dev->class_info->desc);
+    if (dev->class_info.has_desc) {
+        monitor_printf(mon, "%s", dev->class_info.desc);
     } else {
-        monitor_printf(mon, "Class %04" PRId64, dev->class_info->q_class);
+        monitor_printf(mon, "Class %04" PRId64, dev->class_info.q_class);
     }
 
     monitor_printf(mon, ": PCI device %04" PRIx64 ":%04" PRIx64 "\n",
-                   dev->id->vendor, dev->id->device);
+                   dev->id.vendor, dev->id.device);
 
     if (dev->has_irq) {
         monitor_printf(mon, "      IRQ %" PRId64 ".\n", dev->irq);
@@ -686,25 +663,25 @@ static void hmp_info_pci_device(Monitor *mon, const PciDeviceInfo *dev)
 
     if (dev->has_pci_bridge) {
         monitor_printf(mon, "      BUS %" PRId64 ".\n",
-                       dev->pci_bridge->bus->number);
+                       dev->pci_bridge->bus.number);
         monitor_printf(mon, "      secondary bus %" PRId64 ".\n",
-                       dev->pci_bridge->bus->secondary);
+                       dev->pci_bridge->bus.secondary);
         monitor_printf(mon, "      subordinate bus %" PRId64 ".\n",
-                       dev->pci_bridge->bus->subordinate);
+                       dev->pci_bridge->bus.subordinate);
 
         monitor_printf(mon, "      IO range [0x%04"PRIx64", 0x%04"PRIx64"]\n",
-                       dev->pci_bridge->bus->io_range->base,
-                       dev->pci_bridge->bus->io_range->limit);
+                       dev->pci_bridge->bus.io_range->base,
+                       dev->pci_bridge->bus.io_range->limit);
 
         monitor_printf(mon,
                        "      memory range [0x%08"PRIx64", 0x%08"PRIx64"]\n",
-                       dev->pci_bridge->bus->memory_range->base,
-                       dev->pci_bridge->bus->memory_range->limit);
+                       dev->pci_bridge->bus.memory_range->base,
+                       dev->pci_bridge->bus.memory_range->limit);
 
         monitor_printf(mon, "      prefetchable memory range "
                        "[0x%08"PRIx64", 0x%08"PRIx64"]\n",
-                       dev->pci_bridge->bus->prefetchable_range->base,
-                       dev->pci_bridge->bus->prefetchable_range->limit);
+                       dev->pci_bridge->bus.prefetchable_range->base,
+                       dev->pci_bridge->bus.prefetchable_range->limit);
     }
 
     for (region = dev->regions; region; region = region->next) {
@@ -1084,8 +1061,7 @@ void hmp_drive_backup(Monitor *mon, const QDict *qdict)
 
     qmp_drive_backup(device, filename, !!format, format,
                      full ? MIRROR_SYNC_MODE_FULL : MIRROR_SYNC_MODE_TOP,
-                     true, mode, false, 0, false, NULL,
-                     false, 0, false, 0, &err);
+                     true, mode, false, 0, false, 0, false, 0, &err);
     hmp_handle_error(mon, &err);
 }
 
@@ -1208,46 +1184,11 @@ void hmp_migrate_set_capability(Monitor *mon, const QDict *qdict)
     }
 }
 
-void hmp_migrate_set_parameter(Monitor *mon, const QDict *qdict)
+void hmp_migrate_start_postcopy(Monitor *mon, const QDict *qdict)
 {
-    const char *param = qdict_get_str(qdict, "parameter");
-    int value = qdict_get_int(qdict, "value");
     Error *err = NULL;
-    bool has_compress_level = false;
-    bool has_compress_threads = false;
-    bool has_decompress_threads = false;
-    int i;
-
-    for (i = 0; i < MIGRATION_PARAMETER_MAX; i++) {
-        if (strcmp(param, MigrationParameter_lookup[i]) == 0) {
-            switch (i) {
-            case MIGRATION_PARAMETER_COMPRESS_LEVEL:
-                has_compress_level = true;
-                break;
-            case MIGRATION_PARAMETER_COMPRESS_THREADS:
-                has_compress_threads = true;
-                break;
-            case MIGRATION_PARAMETER_DECOMPRESS_THREADS:
-                has_decompress_threads = true;
-                break;
-            }
-            qmp_migrate_set_parameters(has_compress_level, value,
-                                       has_compress_threads, value,
-                                       has_decompress_threads, value,
-                                       &err);
-            break;
-        }
-    }
-
-    if (i == MIGRATION_PARAMETER_MAX) {
-        error_set(&err, QERR_INVALID_PARAMETER, param);
-    }
-
-    if (err) {
-        monitor_printf(mon, "migrate_set_parameter: %s\n",
-                       error_get_pretty(err));
-        error_free(err);
-    }
+    qmp_migrate_start_postcopy(&err);
+    hmp_handle_error(mon, &err);
 }
 
 void hmp_set_password(Monitor *mon, const QDict *qdict)
@@ -1976,3 +1917,15 @@ void hmp_qom_set(Monitor *mon, const QDict *qdict)
     }
     hmp_handle_error(mon, &err);
 }
+
+
+//Added @Kashif
+
+void hmp_dirtyrate(Monitor *mon, const QDict *qdict)
+{
+    uint64_t pdirtyrate = -1;
+    pdirtyrate = get_dirty_pages();
+    monitor_printf(mon, "%s\n", "Kashif");
+    monitor_printf(mon, "%" PRId64 "\n", pdirtyrate);
+}
+
