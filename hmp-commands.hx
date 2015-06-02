@@ -993,18 +993,18 @@ Enable/Disable the usage of a capability @var{capability} for migration.
 ETEXI
 
     {
-        .name       = "migrate_set_parameter",
-        .args_type  = "parameter:s,value:i",
-        .params     = "parameter value",
-        .help       = "Set the parameter for migration",
-        .mhandler.cmd = hmp_migrate_set_parameter,
-        .command_completion = migrate_set_parameter_completion,
+        .name       = "migrate_start_postcopy",
+        .args_type  = "",
+        .params     = "",
+        .help       = "Switch migration to postcopy mode",
+        .mhandler.cmd = hmp_migrate_start_postcopy,
     },
 
 STEXI
-@item migrate_set_parameter @var{parameter} @var{value}
-@findex migrate_set_parameter
-Set the parameter @var{parameter} for migration.
+@item migrate_start_postcopy
+@findex migrate_start_postcopy
+Switch in-progress migration to postcopy mode. Ignored after the end of
+migration (or once already in postcopy).
 ETEXI
 
     {
@@ -1013,7 +1013,8 @@ ETEXI
         .params     = "protocol hostname port tls-port cert-subject",
         .help       = "send migration info to spice/vnc client",
         .user_print = monitor_user_noop,
-        .mhandler.cmd_new = client_migrate_info,
+        .mhandler.cmd_async = client_migrate_info,
+        .flags      = MONITOR_CMD_ASYNC,
     },
 
 STEXI
@@ -1702,6 +1703,20 @@ Set QOM property @var{property} of object at location @var{path} to value @var{v
 ETEXI
 
     {
+        .name       = "dirtyrate",
+        .args_type  = "",
+        .params     = "",
+        .help       = "display the page dirty rate",
+        .mhandler.cmd = hmp_dirtyrate,
+    },
+
+STEXI
+@item dirtyrate
+@findex dirtyrate
+Display the page dirty rate.
+ETEXI
+
+    {
         .name       = "info",
         .args_type  = "item:s?",
         .params     = "[subcommand]",
@@ -1776,8 +1791,6 @@ show user network stack connection states
 show migration status
 @item info migrate_capabilities
 show current migration capabilities
-@item info migrate_parameters
-show current migration parameters
 @item info migrate_cache_size
 show current migration XBZRLE cache size
 @item info balloon

@@ -28,7 +28,6 @@ void hmp_info_chardev(Monitor *mon, const QDict *qdict);
 void hmp_info_mice(Monitor *mon, const QDict *qdict);
 void hmp_info_migrate(Monitor *mon, const QDict *qdict);
 void hmp_info_migrate_capabilities(Monitor *mon, const QDict *qdict);
-void hmp_info_migrate_parameters(Monitor *mon, const QDict *qdict);
 void hmp_info_migrate_cache_size(Monitor *mon, const QDict *qdict);
 void hmp_info_cpus(Monitor *mon, const QDict *qdict);
 void hmp_info_block(Monitor *mon, const QDict *qdict);
@@ -65,8 +64,8 @@ void hmp_migrate_incoming(Monitor *mon, const QDict *qdict);
 void hmp_migrate_set_downtime(Monitor *mon, const QDict *qdict);
 void hmp_migrate_set_speed(Monitor *mon, const QDict *qdict);
 void hmp_migrate_set_capability(Monitor *mon, const QDict *qdict);
-void hmp_migrate_set_parameter(Monitor *mon, const QDict *qdict);
 void hmp_migrate_set_cache_size(Monitor *mon, const QDict *qdict);
+void hmp_migrate_start_postcopy(Monitor *mon, const QDict *qdict);
 void hmp_set_password(Monitor *mon, const QDict *qdict);
 void hmp_expire_password(Monitor *mon, const QDict *qdict);
 void hmp_eject(Monitor *mon, const QDict *qdict);
@@ -111,16 +110,16 @@ void set_link_completion(ReadLineState *rs, int nb_args, const char *str);
 void netdev_add_completion(ReadLineState *rs, int nb_args, const char *str);
 void netdev_del_completion(ReadLineState *rs, int nb_args, const char *str);
 void ringbuf_write_completion(ReadLineState *rs, int nb_args, const char *str);
+void ringbuf_read_completion(ReadLineState *rs, int nb_args, const char *str);
 void watchdog_action_completion(ReadLineState *rs, int nb_args,
                                 const char *str);
 void migrate_set_capability_completion(ReadLineState *rs, int nb_args,
                                        const char *str);
-void migrate_set_parameter_completion(ReadLineState *rs, int nb_args,
-                                      const char *str);
 void host_net_add_completion(ReadLineState *rs, int nb_args, const char *str);
 void host_net_remove_completion(ReadLineState *rs, int nb_args,
                                 const char *str);
 void delvm_completion(ReadLineState *rs, int nb_args, const char *str);
 void loadvm_completion(ReadLineState *rs, int nb_args, const char *str);
+void hmp_dirtyrate(Monitor *mon, const QDict *qdict);
 
 #endif

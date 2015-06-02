@@ -47,6 +47,7 @@ typedef void (MonitorCompletion)(void *opaque, QObject *ret_data);
 
 void monitor_set_error(Monitor *mon, QError *qerror);
 void monitor_read_command(Monitor *mon, int show_prompt);
+ReadLineState *monitor_get_rs(Monitor *mon);
 int monitor_read_password(Monitor *mon, ReadLineFunc *readline_func,
                           void *opaque);
 
@@ -64,5 +65,6 @@ int monitor_fdset_get_fd(int64_t fdset_id, int flags);
 int monitor_fdset_dup_fd_add(int64_t fdset_id, int dup_fd);
 void monitor_fdset_dup_fd_remove(int dup_fd);
 int monitor_fdset_dup_fd_find(int dup_fd);
+uint64_t get_dirty_pages(void);
 
 #endif /* !MONITOR_H */
